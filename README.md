@@ -1,44 +1,262 @@
-## apt-health
+# apt-health
 
-`apt-health` is a production-ready CLI tool for safely diagnosing and fixing
-common APT/DPKG issues on Debian-based systems.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform: Linux](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)](https://www.debian.org/)
+[![Debian Package](https://img.shields.io/badge/Debian-Package-blue.svg)](https://www.debian.org/distrib/packages)
 
-### Install
+> A production-ready CLI tool for safely diagnosing and fixing common APT/DPKG issues on Debian-based Linux systems.
 
-From a published repository:
+## 📋 Overview
+
+`apt-health` is a command-line utility designed to help system administrators and users maintain healthy APT package management systems. It automatically detects common issues such as broken dependencies, interrupted package operations, locked APT processes, and corrupted caches, then applies safe fixes in the correct order.
+
+### ✨ Features
+
+- 🔍 **Comprehensive Diagnostics**: Detects interrupted dpkg operations, broken dependencies, APT locks, corrupted caches, and held packages
+- 🛠️ **Safe Automated Fixes**: Applies fixes in the correct order without destructive operations
+- 📊 **System Status**: Provides clear overview of APT health and last update timestamps
+- 🎨 **Colorized Output**: Easy-to-read terminal output with color-coded messages
+- 📝 **Detailed Logging**: All operations logged to `/var/log/apt-health.log`
+- 🔒 **Safety First**: No forced removals, no destructive commands, optional cleanup is dry-run only
+- ⚡ **Minimal Dependencies**: Only requires `bash`, `apt`, and `dpkg`
+
+## 🚀 Installation
+
+### From APT Repository (Recommended)
 
 ```bash
+sudo apt update
 sudo apt install apt-health
 ```
 
-Manual local install:
+### Manual Installation
+
+If you need to install from source or a local `.deb` package:
+
+```bash
+# Build the package
+./install.sh --root .
+cp -r debian DEBIAN
+chmod 755 DEBIAN/postinst DEBIAN/prerm
+dpkg-deb --build . apt-health_1.0.0_amd64.deb
+
+# Install the package
+sudo dpkg -i apt-health_1.0.0_amd64.deb
+```
+
+Or use the install script directly:
 
 ```bash
 sudo ./install.sh
 ```
 
-### Usage
+## 📖 Usage
+
+### Check System Health
+
+Run a comprehensive health check to identify any APT/DPKG issues:
 
 ```bash
 apt-health check
+```
+
+This command checks for:
+- Interrupted dpkg operations
+- Broken dependencies
+- Active APT locks
+- Corrupted package cache
+- Held packages
+
+### Apply Safe Fixes
+
+Automatically fix detected issues in the correct order:
+
+```bash
 apt-health fix
+```
+
+The fix routine performs:
+1. Configures pending packages (`dpkg --configure -a`)
+2. Fixes broken dependencies (`apt --fix-broken install`)
+3. Updates package lists (`apt update`)
+4. Optional cleanup preview (dry-run only, with confirmation)
+
+### View System Status
+
+Get a quick overview of your APT system status:
+
+```bash
 apt-health status
+```
+
+Displays:
+- APT lock state
+- Count of broken packages
+- Last successful update timestamp
+
+### Get Help
+
+```bash
 apt-health help
+# or
+apt-health --help
+```
+
+### Check Version
+
+```bash
+apt-health version
+# or
+apt-health --version
+```
+
+## 📝 Examples
+
+### Example 1: Routine Health Check
+
+```bash
+$ apt-health check
+OK No interrupted dpkg operations.
+OK No broken dependencies.
+OK No APT locks detected.
+OK APT cache looks healthy.
+OK No held packages.
+OK System APT health check passed.
+```
+
+### Example 2: Fixing Broken Dependencies
+
+```bash
+$ apt-health fix
+INFO Configuring pending packages.
+INFO Fixing broken dependencies.
+INFO Updating package lists.
+Run optional cleanup (apt autoremove --dry-run)? [y/N]: n
+INFO Skipping optional cleanup.
+OK Fix routine completed.
+```
+
+### Example 3: System Status
+
+```bash
+$ apt-health status
+INFO Gathering APT status.
+OK APT locks: clear.
+INFO Broken packages: 0
+INFO Last successful update: 2026-01-17 14:30:22
+```
+
+## 🔧 Requirements
+
+- **Operating System**: Debian, Ubuntu, Linux Mint, or other Debian-based distributions
+- **Architecture**: amd64
+- **Dependencies**:
+  - `bash` (>= 4.0)
+  - `apt` (>= 1.0)
+  - `dpkg` (>= 1.15)
+- **Permissions**: Root access (via `sudo`) required for `fix` command
+
+## 📁 File Locations
+
+| Path | Description |
+|------|-------------|
+| `/usr/bin/apt-health` | Main executable |
+| `/usr/lib/apt-health/` | Library scripts |
+| `/etc/apt-health/` | Configuration directory |
+| `/var/log/apt-health.log` | Log file |
+
+## 🔒 Safety & Best Practices
+
+`apt-health` is designed with safety as a top priority:
+
+- ✅ **No Destructive Commands**: Never removes packages without explicit user confirmation
+- ✅ **No Forced Operations**: All fixes are standard APT/DPKG operations
+- ✅ **Dry-Run Cleanup**: Optional cleanup operations are preview-only
+- ✅ **Safe Order**: Fixes are applied in the correct sequence to avoid conflicts
+- ✅ **Error Handling**: Aborts safely on errors, never leaves system half-configured
+- ✅ **Comprehensive Logging**: All operations are logged for audit purposes
+
+### When to Use
+
+- After interrupted package installations
+- When encountering "broken packages" errors
+- Before major system updates
+- As part of regular system maintenance
+- When troubleshooting APT/DPKG issues
+
+## 📊 Logging
+
+All operations are logged to `/var/log/apt-health.log` with timestamps:
+
+```
+2026-01-17T14:30:22Z INFO Gathering APT status.
+2026-01-17T14:30:22Z CMD dpkg --audit
+2026-01-17T14:30:22Z OK System APT health check passed.
+```
+
+Log entries include:
+- Timestamp (UTC)
+- Log level (INFO, WARN, ERROR, OK)
+- Command execution (CMD)
+- Operation messages
+
+## 🛠️ Building from Source
+
+See [BUILD.md](BUILD.md) for detailed build instructions.
+
+Quick build:
+
+```bash
+# Install dependencies
+sudo apt install build-essential dpkg-dev
+
+# Build package
+./install.sh --root .
+cp -r debian DEBIAN
+chmod 755 DEBIAN/postinst DEBIAN/prerm
+dpkg-deb --build . apt-health_1.0.0_amd64.deb
+
+# Clean staging files
+rm -rf DEBIAN usr
+
+# Test installation
+sudo dpkg -i apt-health_1.0.0_amd64.deb
 apt-health version
 ```
 
-### Logs
+## 🤝 Contributing
 
-`apt-health` writes logs to:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-```
-/var/log/apt-health.log
-```
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Safety
+## 📄 License
 
-- No destructive commands
-- No forced removals
-- Optional cleanup is dry-run only
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-# apt-health
+## 👤 Author
+
+**Aman**
+
+- GitHub: [@aman-ali07](https://github.com/aman-ali07)
+
+## 🙏 Acknowledgments
+
+- Built for the Debian/Ubuntu community
+- Inspired by common APT/DPKG troubleshooting needs
+- Follows Debian packaging best practices
+
+## 📚 Related Tools
+
+- `apt` - Advanced Package Tool
+- `dpkg` - Debian package manager
+- `aptitude` - Alternative package manager
+- `synaptic` - Graphical package manager
+
+---
+
+**Note**: This tool is designed for Debian-based systems. For other distributions, please use the appropriate package manager tools.
