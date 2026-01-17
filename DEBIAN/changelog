@@ -1,0 +1,9 @@
+apt-health (1.0.0-1) unstable; urgency=medium
+
+  * Initial release
+  * Safe APT/DPKG diagnostics and fixes
+  * Comprehensive health checks
+  * Automated fix routines
+  * System status reporting
+
+ -- Aman <aman@example.com>  Fri, 17 Jan 2026 21:00:00 +0000

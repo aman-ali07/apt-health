@@ -18,21 +18,14 @@ ensure_sudo() {
 run_cmd() {
   local cmd="$1"
   local needs_root="${2:-0}"
-  local exit_code
 
   log_cmd "$cmd"
 
   if [ "$needs_root" -eq 1 ] && [ "$EUID" -ne 0 ]; then
-    sudo bash -c "$cmd" || exit_code=$?
+    sudo bash -c "$cmd"
   else
-    bash -c "$cmd" || exit_code=$?
+    bash -c "$cmd"
   fi
-
-  if [ -n "${exit_code:-}" ]; then
-    log_error "Command failed: $cmd"
-    return "$exit_code"
-  fi
-  return 0
 }
 
 confirm() {

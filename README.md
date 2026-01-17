@@ -34,17 +34,15 @@ sudo apt install apt-health
 If you need to install from source or a local `.deb` package:
 
 ```bash
-# Build the package
-./install.sh --root .
-cp -r debian DEBIAN
-chmod 755 DEBIAN/postinst DEBIAN/prerm
-dpkg-deb --build . apt-health_1.0.0_amd64.deb
+# Build the package (recommended)
+./build-package.sh
 
 # Install the package
 sudo dpkg -i apt-health_1.0.0_amd64.deb
+sudo apt-get install -f  # Install dependencies if needed
 ```
 
-Or use the install script directly:
+Or use the install script directly (for development):
 
 ```bash
 sudo ./install.sh
@@ -165,9 +163,11 @@ INFO Last successful update: 2026-01-17 14:30:22
 | `/etc/apt-health/` | Configuration directory |
 | `/var/log/apt-health.log` | Log file |
 
-## 🔒 Safety & Best Practices
+## 🔒 Safety & Security
 
-`apt-health` is designed with safety as a top priority:
+`apt-health` is designed with safety and security as top priorities:
+
+### Safety Features
 
 - ✅ **No Destructive Commands**: Never removes packages without explicit user confirmation
 - ✅ **No Forced Operations**: All fixes are standard APT/DPKG operations
@@ -175,6 +175,15 @@ INFO Last successful update: 2026-01-17 14:30:22
 - ✅ **Safe Order**: Fixes are applied in the correct sequence to avoid conflicts
 - ✅ **Error Handling**: Aborts safely on errors, never leaves system half-configured
 - ✅ **Comprehensive Logging**: All operations are logged for audit purposes
+
+### Security Considerations
+
+- 🔐 **Log File Permissions**: Log files are created with restricted permissions (0640, root:adm)
+- 🔐 **Input Sanitization**: All user input and log messages are sanitized
+- 🔐 **Minimal Privileges**: Only requests root access when necessary (fix command)
+- 🔐 **No Network Operations**: Tool does not make network connections
+- 🔐 **Read-Only Checks**: Most diagnostic operations are read-only and safe
+- ⚠️ **Root Access**: The `fix` command requires root privileges via sudo
 
 ### When to Use
 
@@ -210,19 +219,16 @@ Quick build:
 # Install dependencies
 sudo apt install build-essential dpkg-dev
 
-# Build package
-./install.sh --root .
-cp -r debian DEBIAN
-chmod 755 DEBIAN/postinst DEBIAN/prerm
-dpkg-deb --build . apt-health_1.0.0_amd64.deb
-
-# Clean staging files
-rm -rf DEBIAN usr
+# Build package (automated)
+./build-package.sh
 
 # Test installation
 sudo dpkg -i apt-health_1.0.0_amd64.deb
+sudo apt-get install -f  # Install dependencies if needed
 apt-health version
 ```
+
+See [BUILD.md](BUILD.md) for detailed build instructions.
 
 ## 🤝 Contributing
 
@@ -250,12 +256,63 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Inspired by common APT/DPKG troubleshooting needs
 - Follows Debian packaging best practices
 
+## 🔧 Troubleshooting
+
+### Permission Denied Errors
+
+If you see permission errors when running `apt-health check`:
+
+```bash
+# Run with sudo for full diagnostics
+sudo apt-health check
+```
+
+### Log File Issues
+
+If log file creation fails:
+
+```bash
+# Manually create log file with correct permissions
+sudo touch /var/log/apt-health.log
+sudo chmod 0640 /var/log/apt-health.log
+sudo chown root:adm /var/log/apt-health.log
+```
+
+### Package Installation Issues
+
+If package installation fails:
+
+```bash
+# Install missing dependencies
+sudo apt-get install -f
+
+# Or install dependencies manually
+sudo apt install bash apt dpkg
+```
+
+### Build Issues
+
+If the build script fails:
+
+```bash
+# Ensure you have build tools
+sudo apt install build-essential dpkg-dev
+
+# Check file permissions
+chmod +x build-package.sh install.sh
+chmod +x DEBIAN/postinst DEBIAN/prerm
+```
+
 ## 📚 Related Tools
 
 - `apt` - Advanced Package Tool
 - `dpkg` - Debian package manager
 - `aptitude` - Alternative package manager
 - `synaptic` - Graphical package manager
+
+## 🐛 Reporting Issues
+
+Found a bug or have a suggestion? Please open an issue on [GitHub](https://github.com/aman-ali07/apt-health/issues).
 
 ---
 
