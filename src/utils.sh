@@ -19,17 +19,26 @@ run_cmd() {
   local cmd="$1"
   local needs_root="${2:-0}"
   local exit_code
+  local output
 
   log_cmd "$cmd"
 
   if [ "$needs_root" -eq 1 ] && [ "$EUID" -ne 0 ]; then
-    sudo bash -c "$cmd" || exit_code=$?
+    output="$(sudo bash -c "$cmd" 2>&1)" || exit_code=$?
   else
-    bash -c "$cmd" || exit_code=$?
+    output="$(bash -c "$cmd" 2>&1)" || exit_code=$?
+  fi
+
+  # Print output (errors go to stderr, normal output to stdout)
+  if [ -n "$output" ]; then
+    if [ -n "${exit_code:-}" ]; then
+      echo "$output" >&2
+    else
+      echo "$output"
+    fi
   fi
 
   if [ -n "${exit_code:-}" ]; then
-    log_error "Command failed: $cmd"
     return "$exit_code"
   fi
   return 0

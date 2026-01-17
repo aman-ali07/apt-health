@@ -12,11 +12,19 @@ log_line() {
   # Always log to file; use sudo if needed
   local message="$1"
   local timestamp
-  timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u +"%Y-%m-%d %H:%M:%S")"
+  
+  # Sanitize message to prevent log injection
+  message="${message//$'\n'/ }"
+  message="${message//$'\r'/ }"
+  
   if [ -w "$LOG_FILE" ]; then
-    printf "%s %s\n" "$timestamp" "$message" >> "$LOG_FILE"
+    printf "%s %s\n" "$timestamp" "$message" >> "$LOG_FILE" 2>/dev/null || true
   else
-    printf "%s %s\n" "$timestamp" "$message" | sudo tee -a "$LOG_FILE" >/dev/null
+    # Try sudo, but don't fail if it's not available or requires password
+    if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      printf "%s %s\n" "$timestamp" "$message" | sudo tee -a "$LOG_FILE" >/dev/null 2>&1 || true
+    fi
   fi
 }
 
