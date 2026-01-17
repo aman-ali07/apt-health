@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+
+install -d -m 0755 /etc/apt-health
+touch /var/log/apt-health.log
+chmod 0644 /var/log/apt-health.log
+
+exit 0

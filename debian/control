@@ -1,0 +1,10 @@
+Package: apt-health
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: Aman
+Depends: bash, apt, dpkg
+Description: Safe APT/DPKG diagnostics and fixes
+ A production-ready CLI tool to detect common APT/DPKG issues,
+ safely apply fixes, and provide clear system status information.
